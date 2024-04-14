@@ -50,6 +50,21 @@ namespace FEM2A {
             mesh.save("data/geothermie_4.mesh");
             return true;
         }
+        /** 
+        Pour vérifier que la somme des poids pour la fonction f = 1 vaut 0.5 :
+        **/
+        bool test_quadrature(int order) {
+            Quadrature quad = Quadrature::get_quadrature(order);
+            std::cout<< quad.nb_points() << std::endl;
+            double sum = 0;
+            for (int i = 0; i < quad.nb_points(); ++i){
+                std::cout<< quad_weight(i).x << ""<< quad_weight(i).y << std::endl;
+                std::cout<< quad.weight(i) << std::endl;
+                sum = sum + quad.weight(i);
+                }
+            std::cout<< sum << std::endl;
+            return true
+        }
 
     }
 }
