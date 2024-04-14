@@ -55,10 +55,10 @@ namespace FEM2A {
         **/
         bool test_quadrature(int order) {
             Quadrature quad = Quadrature::get_quadrature(order);
-            std::cout<< quad.nb_points() << std::endl;
+            std::cout<< "Nombre de points : "<< quad.nb_points() << std::endl;
             double sum = 0;
             for (int i = 0; i < quad.nb_points(); ++i){
-                std::cout<< quad_weight(i).x << ""<< quad_weight(i).y << std::endl;
+                std::cout<< "X : "<<quad.points(i).x << " Y : "<< quad.point(i).y << std::endl;
                 std::cout<< quad.weight(i) << std::endl;
                 sum = sum + quad.weight(i);
                 }
