@@ -156,17 +156,17 @@ namespace FEM2A {
         
         vertex r ;
         if ( border_ ){
-            float x = 0;
+            double x = 0;
             x = vertices_[0].x * (1 - x_r.x ) + vertices_[1].x * (x_r.x);
-       	    float y = 0;
+       	    double y = 0;
        	    y = vertices_[0].y * (1 - x_r.x) + vertices_[1].y * (x_r.x);
             r.x = x;
             r.y = y;
         }
         if (not border_){
-	    float x = 0;
+	    double x = 0;
             x = vertices_[0].x * (1 - x_r.x - x_r.y) + vertices_[1].x * (x_r.x) + vertices_[2].x * (x_r.y);
-       	    float y = 0;
+       	    double y = 0;
        	    y = vertices_[0].y * (1 - x_r.x - x_r.y) + vertices_[1].y * (x_r.x) + vertices_[2].y * (x_r.y);
             r.x = x;
             r.y = y;
@@ -176,12 +176,12 @@ namespace FEM2A {
         }
 
 
-    
 
     DenseMatrix ElementMapping::jacobian_matrix( vertex x_r ) const
     {
         std::cout << "[ElementMapping] compute jacobian matrix" << '\n';
-        // TODO
+        
+
         DenseMatrix J ;
         return J ;
     }
