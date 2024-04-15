@@ -58,13 +58,27 @@ namespace FEM2A {
             std::cout<< "Nombre de points : "<< quad.nb_points() << std::endl;
             double sum = 0;
             for (int i = 0; i < quad.nb_points(); ++i){
-                std::cout<< "X : "<<quad.points(i).x << " Y : "<< quad.point(i).y << std::endl;
-                std::cout<< quad.weight(i) << std::endl;
+                std::cout<< "X : "<<quad.point(i).x << " Y : "<< quad.point(i).y << std::endl;
+                std::cout<<"Poids : "<< quad.weight(i) << std::endl;
                 sum = sum + quad.weight(i);
                 }
             std::cout<< sum << std::endl;
-            return true
+            return true;
         }
-    bool test_element_mapping(int 
+        bool test_element_mapping(bool border, int i){
+            Mesh mesh;
+            mesh.load("data/square.mesh");
+            ElementMapping elem(mesh, border, i);
+            vertex v;
+            if (border){
+            v.x = 0.2;
+            std::cout<< "Réf : "<<v.x<<"\nReel : X :"<< elem.transform(v).x << " Y : " << elem.transform(v).y << std::endl;}
+            if (not border){
+            v.x = 0.2; 
+            v.y = 0.4;
+            std::cout<< "Réf : "<<v.x<<" \nReel : X :"<< elem.transform(v).x << " Y : " << elem.transform(v).y << std::endl;}
+            
+            return true;
+        }   
     }
 }

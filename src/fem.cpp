@@ -135,26 +135,48 @@ namespace FEM2A {
         // vertice_ = vecteur de vertex
         std::cout << "[ElementMapping] constructor for element " << i << std::endl;
         if ( border ){
-            std::cout << "edge";
-            for (int ind_Global = 0; ind_Glob < 2; ind_Global ++){
-                vertice.push_back(M.get_edge_vertex(i,ind_Globale));
+            std::cout << "border"<<std::endl;
+            for (int ind_local = 0; ind_local < 2; ind_local ++){
+                vertices_.push_back(M.get_edge_vertex(i,ind_local));
+                std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : " << vertices_[ind_local].y << std::endl;;
             }
         }
         if (not border){
             std::cout<<"triangle"<<std::endl;
-            for (int ind_Glob = 0; ind_Glob < 3; ind_Global ++){
-                vertice_.push_back(M.get_triangle_vertex(i, ind_Global));
+            for (int ind_local = 0; ind_local < 3; ind_local ++){
+                vertices_.push_back(M.get_triangle_vertex(i, ind_local));
+                std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : "<<vertices_[ind_local].y << std::endl;
             }
         }
     }
 
     vertex ElementMapping::transform( vertex x_r ) const
     {
-        std::cout << "[ElementMapping] transform reference to world space" << '\n';
-        // TODO
+        //std::cout << "[ElementMapping] transform reference to world space" << '\n';
+        
         vertex r ;
+        if ( border_ ){
+            float x = 0;
+            x = vertices_[0].x * (1 - x_r.x ) + vertices_[1].x * (x_r.x);
+       	    float y = 0;
+       	    y = vertices_[0].y * (1 - x_r.x) + vertices_[1].y * (x_r.x);
+            r.x = x;
+            r.y = y;
+        }
+        if (not border_){
+	    float x = 0;
+            x = vertices_[0].x * (1 - x_r.x - x_r.y) + vertices_[1].x * (x_r.x) + vertices_[2].x * (x_r.y);
+       	    float y = 0;
+       	    y = vertices_[0].y * (1 - x_r.x - x_r.y) + vertices_[1].y * (x_r.x) + vertices_[2].y * (x_r.y);
+            r.x = x;
+            r.y = y;
+            
+        	}
         return r ;
-    }
+        }
+
+
+    
 
     DenseMatrix ElementMapping::jacobian_matrix( vertex x_r ) const
     {
