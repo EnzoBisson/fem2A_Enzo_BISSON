@@ -179,18 +179,38 @@ namespace FEM2A {
 
     DenseMatrix ElementMapping::jacobian_matrix( vertex x_r ) const
     {
-        std::cout << "[ElementMapping] compute jacobian matrix" << '\n';
+        //std::cout << "[ElementMapping] compute jacobian matrix" << '\n';
         
-
         DenseMatrix J ;
+        if (border_){
+        	J.set_size(2,1);
+        	J.set(0, 0, vertices_[1].x - vertices_[0].x);
+        	J.set(1, 0, vertices_[1].y - vertices_[0].y);        	
+        	
+        }
+	if (not border_){
+        	J.set_size(2,2);
+        	J.set(0, 0, vertices_[1].x - vertices_[0].x);
+        	J.set(0, 1, vertices_[2].x - vertices_[0].x);        	
+        	J.set(1, 0, vertices_[1].y - vertices_[0].y);        	
+        	J.set(1, 1, vertices_[2].y - vertices_[0].y);        	
+        }
         return J ;
+    	
     }
 
     double ElementMapping::jacobian( vertex x_r ) const
     {
         std::cout << "[ElementMapping] compute jacobian determinant" << '\n';
-        // TODO
-        return 0. ;
+        DenseMatrix J = jacobian_matrix( x_r );
+        double det;
+        if (border_){
+		det = std::sqrt(J.get(0,0)*J.get(0,0) + J.get(1,0)*J.get(1,0));
+	}
+	if (not border_){
+		det = J.det_2x2();
+	}
+        return det ;
     }
 
     /****************************************************************/
@@ -200,28 +220,48 @@ namespace FEM2A {
         : dim_( dim ), order_( order )
     {
         std::cout << "[ShapeFunctions] constructor in dimension " << dim << '\n';
-        // TODO
     }
 
     int ShapeFunctions::nb_functions() const
     {
         std::cout << "[ShapeFunctions] number of functions" << '\n';
-        // TODO
-        return 0 ;
+        int nb = 0;
+        if (dim_ == 1){nb = 2;}
+        if (dim_ == 2){nb = 3;}
+        return nb;
     }
 
     double ShapeFunctions::evaluate( int i, vertex x_r ) const
     {
         std::cout << "[ShapeFunctions] evaluate shape function " << i << '\n';
-        // TODO
-        return 0. ; // should not be reached
+        double x;
+        if (dim_ == 1){
+        	if ( i == 0 ){x = 1 - x_r.x;}
+        	if ( i == 1 ){x = x_r.x;}
+        }
+        if (dim_ == 2){
+        	if (i == 0){x = 1 - x_r.x - x_r.y;}
+        	if (i == 1){x = x_r.x;}
+        	if (i == 2){x = x_r.y;}
+        }
+        return x;
     }
 
     vec2 ShapeFunctions::evaluate_grad( int i, vertex x_r ) const
     {
         std::cout << "[ShapeFunctions] evaluate gradient shape function " << i << '\n';
-        // TODO
+	
         vec2 g ;
+
+        if (dim_ == 1){
+        	if ( i == 0 ){g.x = -1; g.y = 0 ;}
+        	if ( i == 1 ){g.x = 1; g.y = 0 ;}
+        }
+        if (dim_ == 2){
+        	if (i == 0){g.x = -1; g.y = -1 ;}
+        	if (i == 1){g.x = 1; g.y = 0 ;}
+        	if (i == 2){g.x = 0; g.y = 1 ;}
+        }
         return g ;
     }
 

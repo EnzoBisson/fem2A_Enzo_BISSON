@@ -32,7 +32,8 @@ void run_tests()
     const bool t_lmesh = false;
     const bool t_io = false;
     const bool t_quad = false;
-    const bool t_mapping = true;
+    const bool t_mapping = false;
+    const bool t_shape_fun = true;
     
 
     if( t_opennl ) test_opennl();
@@ -40,6 +41,7 @@ void run_tests()
     if( t_io ) Tests::test_load_save_mesh();
     if ( t_quad ) Tests::test_quadrature(2);
     if( t_mapping ) Tests::test_element_mapping(false, 4);
+    if (t_shape_fun) Tests::test_shape_function(1,1);
 }
 
 void run_simu()

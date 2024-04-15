@@ -71,14 +71,30 @@ namespace FEM2A {
             ElementMapping elem(mesh, border, i);
             vertex v;
             if (border){
-            v.x = 0.2;
-            std::cout<< "Réf : "<<v.x<<"\nReel : X :"<< elem.transform(v).x << " Y : " << elem.transform(v).y << std::endl;}
+		    v.x = 0.2;
+		    std::cout<< "Réf : "<<v.x<<"\nReel : X : "<< elem.transform(v).x << ", Y : " << elem.transform(v).y << std::endl;
+		    DenseMatrix J = elem.jacobian_matrix(v);
+		    J.print();
+		    std::cout<<elem.jacobian(v)<<std::endl;
+            
+            	}
             if (not border){
-            v.x = 0.2; 
-            v.y = 0.4;
-            std::cout<< "Réf : "<<v.x<<" \nReel : X :"<< elem.transform(v).x << " Y : " << elem.transform(v).y << std::endl;}
+		    v.x = 0.2; 
+		    v.y = 0.4;
+		    std::cout<< "Réf : "<<v.x<<" \nReel : X : "<< elem.transform(v).x << ", Y : " << elem.transform(v).y << std::endl;
+		    DenseMatrix J = elem.jacobian_matrix(v);
+		    J.print();
+		    std::cout<<elem.jacobian(v)<<std::endl;
+            	}
             
             return true;
-        }   
+        } 
+        bool test_shape_function(int dim, int order){
+		ShapeFunctions f(dim, order);
+		std::cout<<"Dim = "<<dim<<", ordre = "<<order<<std::endl;
+		std::cout<<"Nombre de fonctions : "<<f.nb_functions()<<std::endl;
+        	return true;
+        	
+        }  
     }
 }
