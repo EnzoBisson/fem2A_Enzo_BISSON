@@ -33,7 +33,8 @@ void run_tests()
     const bool t_io = false;
     const bool t_quad = false;
     const bool t_mapping = false;
-    const bool t_shape_fun = true;
+    const bool t_shape_fun = false;
+    const bool t_fem_function = true;
     
 
     if( t_opennl ) test_opennl();
@@ -42,6 +43,7 @@ void run_tests()
     if ( t_quad ) Tests::test_quadrature(2);
     if( t_mapping ) Tests::test_element_mapping(false, 4);
     if (t_shape_fun) Tests::test_shape_function(1,1);
+    if (t_fem_function) Tests::test_fem_function(true, 4);
 }
 
 void run_simu()

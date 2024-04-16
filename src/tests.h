@@ -89,12 +89,49 @@ namespace FEM2A {
             
             return true;
         } 
-        bool test_shape_function(int dim, int order){
+        bool test_shape_function(int dim, int order=1){
 		ShapeFunctions f(dim, order);
 		std::cout<<"Dim = "<<dim<<", ordre = "<<order<<std::endl;
 		std::cout<<"Nombre de fonctions : "<<f.nb_functions()<<std::endl;
-        	return true;
-        	
+		
+        	return true;        	
         }  
+        
+        double k1(vertex x){
+        	return 1.;}
+        	
+        bool test_fem_function(bool border, int i){
+        	DenseMatrix Ke;
+        	Ke.set_size(3,3);
+        	Mesh mesh;
+            	mesh.load("data/square.mesh");
+            	int dim;
+            	if (border){//neumann
+            		dim = 1;
+		    	Quadrature quad = Quadrature::get_quadrature(2, border);            		
+            		ElementMapping elem(mesh, border, i);
+		    	ShapeFunctions f(dim, 1);
+		    	std::vector<double> Fe;
+		    	assemble_elementary_neumann_vector(elem, f, quad, k1, Fe);
+		    	std::cout<<"Fe = "<<Fe[0]<<", "<<Fe[1]<<std::endl;	
+            	}
+            	if (not border){
+            		dim = 2;
+            		ElementMapping elem(mesh, border, i);
+            		ShapeFunctions f(dim, 1);
+		    	Quadrature quad = Quadrature::get_quadrature(2);
+		    	assemble_elementary_matrix(elem, f, quad, k1, Ke);
+		    	Ke.print();
+		    	SparseMatrix K(mesh.nb_vertices());
+		    	local_to_global_matrix(mesh, i, Ke, K);
+		    	K.print();
+		    	std::vector<double> Fe;
+		    	assemble_elementary_vector(elem, f, quad, k1, Fe);
+		    	std::cout<<"Fe = "<<Fe[0]<<", "<<Fe[1]<<", "<<Fe[2]<<std::endl;
+            	}
+            	
+            	
+            	return true;
+        }
     }
 }

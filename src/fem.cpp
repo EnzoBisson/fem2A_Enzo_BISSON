@@ -108,7 +108,7 @@ namespace FEM2A {
             pts = const_cast<double*>(segment_P2);
             nb_pts = 2;
         } else {
-            std::cout << "Quadrature not implemented for order " << order << std::endl;
+            //std::cout << "Quadrature not implemented for order " << order << std::endl;
             assert( false );
         }
         Q.wxy_.resize(nb_pts * 3);
@@ -133,19 +133,19 @@ namespace FEM2A {
         : border_( border )
     {
         // vertice_ = vecteur de vertex
-        std::cout << "[ElementMapping] constructor for element " << i << std::endl;
+        //std::cout << "[ElementMapping] constructor for element " << i << std::endl;
         if ( border ){
-            std::cout << "border"<<std::endl;
+            //std::cout << "border"<<std::endl;
             for (int ind_local = 0; ind_local < 2; ind_local ++){
                 vertices_.push_back(M.get_edge_vertex(i,ind_local));
-                std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : " << vertices_[ind_local].y << std::endl;;
+                //std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : " << vertices_[ind_local].y << std::endl;;
             }
         }
         if (not border){
-            std::cout<<"triangle"<<std::endl;
+            //std::cout<<"triangle"<<std::endl;
             for (int ind_local = 0; ind_local < 3; ind_local ++){
                 vertices_.push_back(M.get_triangle_vertex(i, ind_local));
-                std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : "<<vertices_[ind_local].y << std::endl;
+                //std::cout<<"Vertex numéro "<<ind_local<<"\nX : " << vertices_[ind_local].x << "\nY : "<<vertices_[ind_local].y << std::endl;
             }
         }
     }
@@ -201,7 +201,7 @@ namespace FEM2A {
 
     double ElementMapping::jacobian( vertex x_r ) const
     {
-        std::cout << "[ElementMapping] compute jacobian determinant" << '\n';
+        //std::cout << "[ElementMapping] compute jacobian determinant" << '\n';
         DenseMatrix J = jacobian_matrix( x_r );
         double det;
         if (border_){
@@ -219,7 +219,7 @@ namespace FEM2A {
     ShapeFunctions::ShapeFunctions( int dim, int order )
         : dim_( dim ), order_( order )
     {
-        std::cout << "[ShapeFunctions] constructor in dimension " << dim << '\n';
+        //std::cout << "[ShapeFunctions] constructor in dimension " << dim << '\n';
     }
 
     int ShapeFunctions::nb_functions() const
@@ -233,7 +233,7 @@ namespace FEM2A {
 
     double ShapeFunctions::evaluate( int i, vertex x_r ) const
     {
-        std::cout << "[ShapeFunctions] evaluate shape function " << i << '\n';
+        //std::cout << "[ShapeFunctions] evaluate shape function " << i << '\n';
         double x;
         if (dim_ == 1){
         	if ( i == 0 ){x = 1 - x_r.x;}
@@ -249,7 +249,7 @@ namespace FEM2A {
 
     vec2 ShapeFunctions::evaluate_grad( int i, vertex x_r ) const
     {
-        std::cout << "[ShapeFunctions] evaluate gradient shape function " << i << '\n';
+        //std::cout << "[ShapeFunctions] evaluate gradient shape function " << i << '\n';
 	
         vec2 g ;
 
@@ -272,11 +272,36 @@ namespace FEM2A {
         const ElementMapping& elt_mapping,
         const ShapeFunctions& reference_functions,
         const Quadrature& quadrature,
-        double (*coefficient)(vertex),
+        double (*coefficient)(vertex),//toute fonction (k) qui prend un vertex \
+        en entré et renvoi un double.
         DenseMatrix& Ke )
     {
-        std::cout << "compute elementary matrix" << '\n';
-        // TODO
+        //std::cout << "Compute elementary matrix" << '\n';
+        int p = reference_functions.nb_functions();// = nombre de fonctions d'interpolation
+
+	for (int i = 0; i < p; i ++){//ligne i
+		for (int j = 0; j < p; j ++){//colonne j
+			double sum = 0;			
+			for (int q = 0; q < p; q ++){ // point d'interpolation q
+				double wq = quadrature.weight(q); // poids au point de Gauss
+				vertex x_r = quadrature.point(q); // point de Gauss
+				
+				DenseMatrix J = elt_mapping.jacobian_matrix(x_r);
+				J = J.invert_2x2();
+				J = J.transpose();
+				double det_J = elt_mapping.jacobian(x_r); //déterminant du Jacobien
+				vertex x = elt_mapping.transform(x_r); //transformé du point de Gauss
+				vec2 gradJ_i = reference_functions.evaluate_grad(i, x_r);
+				vec2 gradJ_j = reference_functions.evaluate_grad(j, x_r);
+				gradJ_i = J.mult_2x2_2(gradJ_i);
+				gradJ_j = J.mult_2x2_2(gradJ_j);
+				double dot_grad = dot(gradJ_i,gradJ_j);
+				sum = sum + (wq * coefficient(x) * dot_grad * det_J);
+				}
+			Ke.set(i,j,sum);
+			 
+		}		
+	}
     }
 
     void local_to_global_matrix(
@@ -285,8 +310,15 @@ namespace FEM2A {
         const DenseMatrix& Ke,
         SparseMatrix& K )
     {
-        std::cout << "Ke -> K" << '\n';
-        // TODO
+        //std::cout << "Ke -> K" << '\n';
+        
+	for (int ind_local_i = 0; ind_local_i < 3; ind_local_i ++){
+		for (int ind_local_j = 0; ind_local_j < 3; ind_local_j ++){
+			int ind_glob_i = M.get_triangle_vertex_index(t, ind_local_i);
+			int ind_glob_j = M.get_triangle_vertex_index(t, ind_local_j);
+			K.add(ind_glob_i, ind_glob_j, Ke.get(ind_local_i, ind_local_j));
+		}
+	}
     }
 
     void assemble_elementary_vector(
@@ -296,8 +328,19 @@ namespace FEM2A {
         double (*source)(vertex),
         std::vector< double >& Fe )
     {
-        std::cout << "compute elementary vector (source term)" << '\n';
-        // TODO
+        //std::cout << "compute elementary vector (source term)" << '\n';
+        int p = reference_functions.nb_functions();// = nombre de fonctions
+        for (int i = 0; i < p; i ++){
+		double sum = 0;			
+		for (int q = 0; q < p; q ++){
+			vertex x_r = quadrature.point(q); // point de Gauss 
+			double wq = quadrature.weight(q); // poids au point de Gauss
+			double val_i = reference_functions.evaluate( q, x_r);
+			double det_J = elt_mapping.jacobian(x_r); //déterminant du Jacobien
+			sum += wq * val_i * source(elt_mapping.transform(x_r)) * det_J;
+		}
+		Fe.push_back(sum);
+	}
     }
 
     void assemble_elementary_neumann_vector(
@@ -308,7 +351,20 @@ namespace FEM2A {
         std::vector< double >& Fe )
     {
         std::cout << "compute elementary vector (neumann condition)" << '\n';
-        // TODO
+        int p = reference_functions_1D.nb_functions();// = nombre de fonctions
+        std::cout<<p<<std::endl;
+        for (int i = 0; i < p; i ++){
+		double sum = 0;			
+		for (int q = 0; q < p; q ++){
+			vertex x_r = quadrature_1D.point(q); // point de Gauss 
+			double wq = quadrature_1D.weight(q); // poids au point de Gauss
+			double val_i = reference_functions_1D.evaluate( q, x_r);
+			double det_J = elt_mapping_1D.jacobian(x_r); //déterminant du Jacobien
+			sum += wq * val_i * neumann(elt_mapping_1D.transform(x_r)) * det_J;
+		}
+		Fe.push_back(sum);
+        
+	}
     }
 
     void local_to_global_vector(
@@ -319,7 +375,12 @@ namespace FEM2A {
         std::vector< double >& F )
     {
         std::cout << "Fe -> F" << '\n';
-        // TODO
+        /**
+        if (not border){
+		for (int ind_local_j = 0; ind_local_j < 3; ind_local_j ++){
+			int ind_glob_j = M.get_triangle_vertex_index(i, ind_local_j);
+			F.add(ind_glob_i, ind_glob_j, Ke.get(ind_local_i, ind_local_j));
+	}**/
     }
 
     void apply_dirichlet_boundary_conditions(
@@ -330,7 +391,21 @@ namespace FEM2A {
         std::vector< double >& F )
     {
         std::cout << "apply dirichlet boundary conditions" << '\n';
-        // TODO
+        double max = -1000000000
+        for (int i = 0; i << K.nb_rows(); i ++){
+        	std::vector< double > ligne = K.get_vals_at_line(i);
+        	for (int val : ligne){
+        		if (max < val){
+        			max = val;
+        		}
+        	}
+        double P = 1000*max;
+        for (int i = 0; i << K.nb_rows(); i ++){	
+        	if (attribute_is_dirichlet[i]){
+        		K.add(i,i,P);
+        		F[i]+=P;
+        	}
+        }
     }
 
     void solve_poisson_problem(
