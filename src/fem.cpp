@@ -224,7 +224,7 @@ namespace FEM2A {
 
     int ShapeFunctions::nb_functions() const
     {
-        std::cout << "[ShapeFunctions] number of functions" << '\n';
+        //std::cout << "[ShapeFunctions] number of functions" << '\n';
         int nb = 0;
         if (dim_ == 1){nb = 2;}
         if (dim_ == 2){nb = 3;}
@@ -313,8 +313,8 @@ namespace FEM2A {
         //std::cout << "Ke -> K" << '\n';
         
 	for (int ind_local_i = 0; ind_local_i < 3; ind_local_i ++){
+		int ind_glob_i = M.get_triangle_vertex_index(t, ind_local_i);
 		for (int ind_local_j = 0; ind_local_j < 3; ind_local_j ++){
-			int ind_glob_i = M.get_triangle_vertex_index(t, ind_local_i);
 			int ind_glob_j = M.get_triangle_vertex_index(t, ind_local_j);
 			K.add(ind_glob_i, ind_glob_j, Ke.get(ind_local_i, ind_local_j));
 		}
@@ -373,14 +373,14 @@ namespace FEM2A {
         int i,
         std::vector< double >& Fe,
         std::vector< double >& F )
-    {
-        std::cout << "Fe -> F" << '\n';
-        /**
+    {        
         if (not border){
-		for (int ind_local_j = 0; ind_local_j < 3; ind_local_j ++){
-			int ind_glob_j = M.get_triangle_vertex_index(i, ind_local_j);
-			F.add(ind_glob_i, ind_glob_j, Ke.get(ind_local_i, ind_local_j));
-	}**/
+		for (int ind_local = 0; ind_local < 3; ind_local ++){
+			int ind_glob = M.get_triangle_vertex_index(i, ind_local);
+			F[ind_glob]+=Fe[ind_local];
+			//std::cout<<Fe[ind_local];
+		}
+	}
     }
 
     void apply_dirichlet_boundary_conditions(
@@ -390,20 +390,23 @@ namespace FEM2A {
         SparseMatrix& K,
         std::vector< double >& F )
     {
-        std::cout << "apply dirichlet boundary conditions" << '\n';
-        double max = -1000000000
-        for (int i = 0; i << K.nb_rows(); i ++){
-        	std::vector< double > ligne = K.get_vals_at_line(i);
-        	for (int val : ligne){
-        		if (max < val){
-        			max = val;
+        
+        double P = 10000;
+
+        std::vector< bool > vertices_traite(values.size(), false);//contiendra des true au indices de vertices qui seront traités pour ne pas traiter deux fois un même vertice.
+        
+        for (int edge_ind = 0; edge_ind < M.nb_edges(); edge_ind ++){	
+        	int edge_att = M.get_edge_attribute(edge_ind);
+        	if (attribute_is_dirichlet[edge_att]){
+        		for (int loc_ind = 0; loc_ind < 2; loc_ind ++){
+	        		int vertice_ind = M.get_edge_vertex_index(edge_ind,loc_ind);
+	        		// attention, comme plusieurs bords partagent un même vertice, il faut vérifier que le vertice n'a pas déjà été traité :
+	        		if( not vertices_traite[vertice_ind] ) {
+		                        vertices_traite[vertice_ind] = true;
+        				K.add(vertice_ind,vertice_ind,P);
+        				F[vertice_ind] += P * values[vertice_ind];
+        			}        			
         		}
-        	}
-        double P = 1000*max;
-        for (int i = 0; i << K.nb_rows(); i ++){	
-        	if (attribute_is_dirichlet[i]){
-        		K.add(i,i,P);
-        		F[i]+=P;
         	}
         }
     }

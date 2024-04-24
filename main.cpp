@@ -43,19 +43,20 @@ void run_tests()
     if ( t_quad ) Tests::test_quadrature(2);
     if( t_mapping ) Tests::test_element_mapping(false, 4);
     if (t_shape_fun) Tests::test_shape_function(1,1);
-    if (t_fem_function) Tests::test_fem_function(true, 4);
+    if (t_fem_function) Tests::test_fem_function(false, 4);
 }
 
 void run_simu()
 {
 
     const bool simu_pure_dirichlet = true;
-
+    const bool terme_source = true;
+    
     const bool verbose = flag_is_used( "-v", arguments )
         || flag_is_used( "--verbose", arguments );
 
     if( simu_pure_dirichlet ) {
-        Simu::pure_dirichlet_pb("data/square.mesh", verbose);
+        Simu::pure_dirichlet_pb("data/square_fine.mesh", verbose, terme_source);
     }
 }
 
